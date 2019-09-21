@@ -1,0 +1,14 @@
+	# gawk profile, created Thu Sep  5 21:17:15 2019
+
+	# Rule(s)
+
+    12  $2 == "node:" { # 2
+     2  	node_count++
+	}
+
+	# END rule(s)
+
+	END {
+     1  	print node_count
+	}
+

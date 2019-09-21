@@ -1,0 +1,37 @@
+nodes:
+  - node: 
+      address: 34.246.176.100  
+      user: ubuntu
+      ssh_keyfile_path: ~/ec2key/selvarke.pem
+      volume_mount: /dev/xvdb
+  - node:
+      address: 34.244.115.174
+      user: ubuntu
+      ssh_keyfile_path: ~/ec2key/selvarke.pem
+      volume_mount: /dev/xvdb
+  - node:
+      address: 34.244.115.174
+      user: ubuntu
+      ssh_keyfile_path: ~/ec2key/selvarke.pem
+      volume_mount: /dev/xvdb
+  - node:
+      address: 34.244.115.174
+      user: ubuntu
+      ssh_keyfile_path: ~/ec2key/selvarke.pem
+      volume_mount: /dev/xvdb
+  - node:
+      address: 34.244.115.174
+      user: ubuntu
+      ssh_keyfile_path: ~/ec2key/selvarke.pem
+      volume_mount: /dev/xvdb
+  - node:
+      address: 34.244.115.174
+      user: ubuntu
+      ssh_keyfile_path: ~/ec2key/selvarke.pem
+      volume_mount: /dev/xvdb
+  - node:
+      address: 34.244.115.174
+      user: ubuntu
+      ssh_keyfile_path: ~/ec2key/selvarke.pem
+      volume_mount: /dev/xvdb
+root_ssh_pubkey: ~/.ssh/id_rsa.pub
