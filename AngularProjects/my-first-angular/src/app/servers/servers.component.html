@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>servers</title>
+</head>
+<body>
+
+<input
+  type="text"
+  [(ngModel)]="serverName"
+>
+
+<button [disabled]="!allowServer" (click)="onCreateServer()">Add Server</button>
+<p *ngIf="serverCreated;else serverError" >{{serverCreationStatus}}</p>
+<ng-template #serverError>
+  <p>No server was created!!!</p>
+</ng-template>
+<app-server *ngFor="let elemserver for servers"></app-server>
+</body>
+</html>
