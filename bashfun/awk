@@ -1,0 +1,62 @@
+cp-kafka.imageRepository: localhost:5000/467560830515.dkr.ecr.eu-west-1.amazonaws.com/confluentinc/cp-enterprise-kafka
+cp-kafka.persistence.size: 100Gi
+cp-kafka.prometheus.jmx.image: localhost:5000/467560830515.dkr.ecr.eu-west-1.amazonaws.com/solsson/kafka-prometheus-jmx-exporter@sha256
+cp-kafka.prometheus.jmx.imageTag: 6f82e2b0464f50da8104acd7363fb9b995001ddff77d248379f8788e78946143
+cp-kafka.prometheus.kafka.image: localhost:5000/467560830515.dkr.ecr.eu-west-1.amazonaws.com/danielqsj/kafka-exporter
+cp-kafka.prometheus.kafka.imageTag: v1.2.0
+cp-zookeeper.imageRepository: localhost:5000/467560830515.dkr.ecr.eu-west-1.amazonaws.com/confluentinc/cp-zookeeper
+cp-zookeeper.persistence.dataDirSize: 5Gi
+cp-zookeeper.persistence.dataLogDirSize: 5Gi
+cp-zookeeper.prometheus.jmx.image: localhost:5000/467560830515.dkr.ecr.eu-west-1.amazonaws.com/solsson/kafka-prometheus-jmx-exporter@sha256
+cp-zookeeper.prometheus.jmx.imageTag: 6f82e2b0464f50da8104acd7363fb9b995001ddff77d248379f8788e78946143
+global.agentLatestVersion:
+global.agentSecretName:
+global.agentRegSecretName: ncc-tls-secret
+global.analyticsAccount:
+global.analyticsDomain:
+global.clusterURL: <TOADD>
+global.dashboardHostname:     #ADD only if the dashboard hostname is different then clusterURL
+global.externalDBConnectionString:
+global.imagePullPolicy: Always
+global.imageRegistry: localhost:5000/467560830515.dkr.ecr.eu-west-1.amazonaws.com
+global.installDB: true
+global.jumpleadKey: 
+global.jumpleadSignupForm:
+global.license: <TOADD> 
+global.metricsImageTag:
+global.nccDefaultAccount: dev
+global.nccDefaultUserName: dev@netrounds.com	 	
+global.nccDefaultUserPassword: Password1
+global.nccDeploymentType: Custom
+global.nccEmailHost: email-smtp.eu-west-1.amazonaws.com
+global.nccEmailPassword: <TOADD>
+global.nccEmailUser: <TOADD>
+global.nccImageTag:
+global.openVpnImageTag:
+global.openvpnEnableIpv6: false
+global.openvpnService.type: NodePort
+global.postgresqlDatabase: netrounds
+global.postgresqlPassword: n3tr0undS
+global.postgresqlUsername: netrounds
+global.probeLatestVersion:
+global.projectMonitoringEnabled: false
+global.releaseImageTag: latest
+global.restolImageTag: latest
+global.secretName:
+global.wsgiMemoryLimit:
+global.zopimKey:
+ncc.deployment.ncc.processes:	1
+ncc.deployment.ncc.threadsPerProcess: 1
+ncc.persistence.size: 100Gi
+registry-creds.aws.accessKeyID: <NOTUSED>
+registry-creds.aws.accountID: _467560830515
+registry-creds.aws.region: eu-west-1
+registry-creds.aws.secretAccessKey: <NOTUSED>
+setDevopsConfig: false
+setIngress: false
+useAnalyticsDefaults: true
+useCustomImages: true
+useImageDefaults: false
+useKafkaDefaults: true
+useNCCDefaults: true
+useOpenVPNDefaults: true
