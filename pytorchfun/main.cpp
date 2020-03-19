@@ -13,5 +13,10 @@ int main(){
     torch::add_out(result,z,a);
     auto res_acc = result.accessor<float,2>();
     std::cout << a.reshape({1,9}) << '\n';
+    if (torch::cuda::is_available()) {
+        std::cout << "CUDA is available" << std::endl;
+    } else{
+        std::cout << "CUDA not available" << std::endl;
+    }
 
 }
