@@ -1,36 +1,19 @@
 #include <iostream>
-#include "CommandGenerator.h"
-#include <boost/variant.hpp>
+#include "StaticMapGenerator.h"
+#include <cstdlib>
+
+Fruits FruitGenerator(){
+    auto fruit = rand() % 3;
+    return static_cast<Fruits>(fruit);
+}
+using DefaultFruitMap = DefaultValueMap<Fruits,Season,Season::AllYear>;
 
 int main() {
-    CommandFactory factory;
-    Iris2Msg msg;
-    auto cmd = factory.makeCommand(PlayerCommandID::SetParam,msg);
-    std::cout << '\n' << "Command ID = " << (int)boost::apply_visitor(GetCommandID(),cmd) << '\n';
-    cmd = factory.makeCommand(PlayerCommandID::Play,msg);
-    std::cout << '\n' << "Command ID = " << (int)boost::apply_visitor(GetCommandID(),cmd) << '\n';
-    cmd = factory.makeCommand(PlayerCommandID::Stop,msg);
-    std::cout << '\n' << "Command ID = " << (int)boost::apply_visitor(GetCommandID(),cmd) << '\n';
-    cmd = factory.makeCommand(PlayerCommandID::IFwd,msg);
-    std::cout << '\n' << "Command ID = " << (int)boost::apply_visitor(GetCommandID(),cmd) << '\n';
-    cmd = factory.makeCommand(PlayerCommandID::IRwd,msg);
-    std::cout << '\n' << "Command ID = " << (int)boost::apply_visitor(GetCommandID(),cmd) << '\n';
-    cmd = factory.makeCommand(PlayerCommandID::Seek,msg);
-    std::cout << '\n' << "Command ID = " << (int)boost::apply_visitor(GetCommandID(),cmd) << '\n';
-    cmd = factory.makeCommand(PlayerCommandID::Pause,msg);
-    std::cout << '\n' << "Command ID = " << (int)boost::apply_visitor(GetCommandID(),cmd) << '\n';
-    cmd = factory.makeCommand(PlayerCommandID::Resume,msg);
-    std::cout << '\n' << "Command ID = " << (int)boost::apply_visitor(GetCommandID(),cmd) << '\n';
-    cmd = factory.makeCommand(PlayerCommandID::GetTime,msg);
-    std::cout << '\n' << "Command ID = " << (int)boost::apply_visitor(GetCommandID(),cmd) << '\n';
-    cmd = factory.makeCommand(PlayerCommandID::Killservice,msg);
-    std::cout << '\n' << "Command ID = " << (int)boost::apply_visitor(GetCommandID(),cmd) << '\n';
-    cmd = factory.makeCommand(PlayerCommandID::Reset,msg);
-    std::cout << '\n' << "Command ID = " << (int)boost::apply_visitor(GetCommandID(),cmd) << '\n';
-    cmd = factory.makeCommand(PlayerCommandID::BCSH,msg);
-    std::cout << '\n' << "Command ID = " << (int)boost::apply_visitor(GetCommandID(),cmd) << '\n';
-    cmd = factory.makeCommand(PlayerCommandID::None,msg);
-    std::cout << '\n' << "Command ID = " << (int)boost::apply_visitor(GetCommandID(),cmd) << '\n';
+    std::cout << "Default = " << (int) FruitMap<Fruits::Grapes>::val << '\n';
+    std::cout << "Mango Season = " << (int) FruitMap<Fruits::Mango>::val << '\n';
+    DefaultFruitMap dfmap{{Fruits::Mango,Season::Summer}};
+    std::cout << "Mango Season = " << (int) dfmap.getValue(Fruits::Mango) << '\n';
+    std::cout << "Random Fruit Season = " << (int) dfmap.getValue(FruitGenerator()) << '\n';
 
     return 0;
 }

@@ -3,7 +3,7 @@
 //
 #include "CommandGenerator.h"
 
-CommandFactory::CommandFactory(){
+CommandFactory::CommandFactory() {
     CommandGeneratorMap[PlayerCommandID::SetParam] = boost::bind(&CommandFactory::GenerateInit,this,_1);
     CommandGeneratorMap[PlayerCommandID::Play] = boost::bind(&CommandFactory::GeneratePlay,this,_1);
     CommandGeneratorMap[PlayerCommandID::GetTime] = boost::bind(&CommandFactory::GenerateGetTime,this,_1);
