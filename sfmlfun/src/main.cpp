@@ -153,7 +153,7 @@ int main()
   bullet_sprite.setPosition(sf::Vector2f(viewSize.x/2,200));
   bullet_sprite.setOrigin(bullet_texture.getSize().x / 2, bullet_texture.getSize().y / 2);
 
-  sf::Clock clock;
+   sf::Clock clock;
    float elasped_time =0;
    const float anim_duration = 1.5f;
    const int framecount = 4;
