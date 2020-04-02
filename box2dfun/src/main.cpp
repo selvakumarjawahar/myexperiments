@@ -10,7 +10,7 @@
 //Below sizes in meters
 #define BALL_RADIUS 1.0f
 #define PADDLE_HEIGHT  1.0f
-#define PADDLE_WIDTH 10.0f
+#define PADDLE_WIDTH 15.0f
 
 sf::Vector2f viewSize(WIDTH, HEIGHT);
 sf::VideoMode vm(viewSize.x,viewSize.y);
@@ -29,7 +29,7 @@ Directions direction = Directions::NoMove;
 
 sf::Vector2f getForceVector(float dt, Directions dir)
 {
-  auto force = 0.1f;
+  auto force = 1.1f;
   switch (dir) {
   case Directions::Right:
     return sf::Vector2f(force, 0);
@@ -86,6 +86,20 @@ public:
    */
 
   void PreSolve(b2Contact* contact, const b2Manifold* oldManifold) {
+    auto typeA = contact->GetFixtureA()->GetShape()->GetType();
+    auto typeB = contact->GetFixtureB()->GetShape()->GetType();
+    b2Fixture *fixtureA = contact->GetFixtureA();
+    b2Fixture *fixtureB = contact->GetFixtureB();
+
+    if(b2Shape::Type::e_edge == typeA || b2Shape::Type::e_circle == typeA ){
+      if(b2Shape::Type::e_edge == typeB || b2Shape::Type::e_circle == typeB ){
+        if(b2Shape::Type::e_circle == typeA){
+          fixtureA->GetBody()->ApplyLinearImpulseToCenter(b2Vec2(-1.0f,0.0f),true);
+        } else {
+          fixtureB->GetBody()->ApplyLinearImpulseToCenter(b2Vec2(-1.0f,0.0f),true);
+        }
+      }
+    }
     //contact->SetRestitution(1.0f);
     //std::cout<< "Presolve contact called" << '\n';
   }
@@ -106,14 +120,14 @@ sf::Vector2f  DisplacementFromPhysicsToPixel(MovementCoordinates movement){
   float x,y;
   x = (movement.CurrentPoint.x - movement.PreviousPoint.x)*SCALE_FACTOR;
   y = -((movement.CurrentPoint.y-HEIGHT) - (movement.PreviousPoint.y-HEIGHT))*SCALE_FACTOR;
-  std::cout << "Y disp = "<<y<<'\n';
+  //std::cout << "Y disp = "<<y<<'\n';
   return sf::Vector2f(x,y);
 }
 
 int main()
 {
   //box2d settings
-  b2Vec2 gravity(0.0f,-0.05f);
+  b2Vec2 gravity(0.0f,-0.1f);
   b2World world(gravity);
   MyContactListener listen;
   world.SetContactListener(&listen);
@@ -131,7 +145,7 @@ int main()
   b2EdgeShape shape;
   shape.Set(
     b2Vec2(0.0f, 0.0f),
-    b2Vec2(WIDTH, 0.0f)
+    b2Vec2(WIDTH/SCALE_FACTOR, 0.0f)
     );
 
   b2FixtureDef sd;
@@ -142,7 +156,6 @@ int main()
   sd.filter.maskBits = 0x0004;
 
   b2BodyDef bd;
-  //bd.position.Set(0.0f,359.0f);
   b2Body* ground = world.CreateBody(&bd);
   ground->CreateFixture(&sd);
 
@@ -151,41 +164,90 @@ int main()
     sf::Vertex(sf::Vector2f(0.0f,HEIGHT)),
     sf::Vertex(sf::Vector2f(WIDTH,HEIGHT))
   };
-  ///
+  ///Wall 1
+  {
+    b2EdgeShape wall;
+    wall.Set(
+      b2Vec2(0.0f, 0.0f),
+      b2Vec2(0.0f, HEIGHT/SCALE_FACTOR)
+      );
 
-  //walls
-  //box2d declaration
-  b2Vec2 wallvertexs[4];
-  wallvertexs[0].Set(0.0f,0.0f);
-  wallvertexs[1].Set(0.0f,HEIGHT);
-  wallvertexs[2].Set(WIDTH,HEIGHT);
-  wallvertexs[3].Set(WIDTH,0.0f);
-  b2ChainShape wall;
-  wall.CreateChain(wallvertexs,4);
+    b2FixtureDef sd;
+    sd.shape = &wall;
+    sd.density = 0.3f;
+    sd.friction = 0.0f;
+    sd.filter.categoryBits = 0x0020;
+    sd.filter.maskBits = 0x0005;
 
-  b2FixtureDef wallfixturedef;
-  wallfixturedef.shape = &wall;
-  wallfixturedef.density =1.0f;
-  wallfixturedef.friction=0.0f;
-
-  b2BodyDef wallbodydef;
-  //wallbodydef.position.Set(0.0f,0.0f);
-  b2Body *wallbody = world.CreateBody(&wallbodydef);
-  wallbody->CreateFixture(&wallfixturedef);
-
+    b2BodyDef bd;
+    b2Body *wallbd = world.CreateBody(&bd);
+    wallbd->CreateFixture(&sd);
+  }
   //SFML Declarations
-  sf::Vertex walllines[] = {
-    sf::Vertex(sf::Vector2f(0.0f,HEIGHT)),
-    sf::Vertex(sf::Vector2f(0.0f,0.0f)),
-    sf::Vertex(sf::Vector2f(WIDTH,0.0f)),
-    sf::Vertex(sf::Vector2f(WIDTH,HEIGHT))
+  sf::Vertex wall1[] = {
+    sf::Vertex(sf::Vector2f(0.0f,0.0)),
+    sf::Vertex(sf::Vector2f(0.0f,HEIGHT)
+    )
   };
+
+  ///Wall 2
+  {
+    b2EdgeShape wall;
+    wall.Set(
+      b2Vec2(0.0f, HEIGHT+BALL_RADIUS/SCALE_FACTOR),
+      b2Vec2(WIDTH/SCALE_FACTOR, HEIGHT+BALL_RADIUS/SCALE_FACTOR)
+    );
+
+    b2FixtureDef sd;
+    sd.shape = &wall;
+    sd.density = 0.3f;
+    sd.friction = 0.0f;
+    sd.filter.categoryBits = 0x0040;
+    sd.filter.maskBits = 0x0005;
+
+    b2BodyDef bd;
+    b2Body *wallbd = world.CreateBody(&bd);
+    wallbd->CreateFixture(&sd);
+  }
+  //SFML Declarations
+  sf::Vertex wall2[] = {
+    sf::Vertex(sf::Vector2f(0.0f,0.0)),
+    sf::Vertex(sf::Vector2f(WIDTH,0.0f)
+    )
+  };
+  //wall3
+  {
+    b2EdgeShape wall;
+    wall.Set(
+      b2Vec2(WIDTH/SCALE_FACTOR,0.0f),
+      b2Vec2(WIDTH/SCALE_FACTOR, HEIGHT/SCALE_FACTOR)
+    );
+
+    b2FixtureDef sd;
+    sd.shape = &wall;
+    sd.density = 0.3f;
+    sd.friction = 0.0f;
+    sd.filter.categoryBits = 0x0080;
+    sd.filter.maskBits = 0x0005;
+
+    b2BodyDef bd;
+    b2Body *wallbd = world.CreateBody(&bd);
+    wallbd->CreateFixture(&sd);
+  }
+  //SFML Declarations
+  sf::Vertex wall3[] = {
+    sf::Vertex(sf::Vector2f(WIDTH,0.0f)),
+    sf::Vertex(sf::Vector2f(WIDTH,HEIGHT)
+    )
+  };
+
+
 
   //ball
   //box2d setup
   b2BodyDef bodyDef;
   bodyDef.type = b2_dynamicBody;
-  bodyDef.position.Set(viewSize.x/2,viewSize.y);
+  bodyDef.position.Set(WIDTH/(SCALE_FACTOR*2),HEIGHT/SCALE_FACTOR);
   b2Body *body = world.CreateBody(&bodyDef);
 
   b2CircleShape dynamicCircle;
@@ -196,10 +258,10 @@ int main()
   fixtureDef.density = 0.3f;
   fixtureDef.friction = 0.0f;
   fixtureDef.filter.categoryBits = 0x0001;
-  fixtureDef.filter.maskBits = 0x0006;
+  fixtureDef.filter.maskBits = 0x00E4;
 
   body->CreateFixture(&fixtureDef)->SetRestitution(1.0f);
-  //body->SetLinearVelocity(b2Vec2(1.0f,1.0f));
+  body->ApplyLinearImpulseToCenter(b2Vec2(0.5f,0.0f), true);
 
   //SFML declarations
   sf::CircleShape circ(BALL_RADIUS*SCALE_FACTOR);
@@ -210,7 +272,7 @@ int main()
   //Box2d Declarations
   b2BodyDef paddleDef;
   paddleDef.type = b2_dynamicBody;
-  paddleDef.position.Set(WIDTH/2,PADDLE_HEIGHT/2);
+  paddleDef.position.Set(WIDTH/(SCALE_FACTOR*2),PADDLE_HEIGHT/2);
   //paddleDef.gravityScale = 0.0f;
   b2Body *paddleBody = world.CreateBody(&paddleDef);
 
@@ -222,9 +284,9 @@ int main()
   paddlefixtureDef.density = 0.3f;
   paddlefixtureDef.friction = 0.0f;
   paddlefixtureDef.filter.categoryBits = 0x0004;
-  paddlefixtureDef.filter.maskBits = 0x0003;
+  paddlefixtureDef.filter.maskBits = 0x00E3;
 
-  paddleBody->CreateFixture(&paddlefixtureDef)->SetRestitution(1.0f);
+  paddleBody->CreateFixture(&paddlefixtureDef);
 
   //SFML Declarations
 
@@ -238,8 +300,7 @@ int main()
   b2Vec2 ball_pos = body->GetPosition();
   b2Vec2 new_ball_pos = body->GetPosition();
 
-  b2Vec2 grdposition = ground->GetPosition();
-
+  //b2Vec2 grdposition = ground->GetPosition();
   while (window.isOpen()) {
     updateInput();
     window.clear();
@@ -251,7 +312,7 @@ int main()
     auto ball_displaceemnt = DisplacementFromPhysicsToPixel(MovementCoordinates(new_ball_pos,ball_pos));
     ball_pos = new_ball_pos;
     circ.move(ball_displaceemnt);
-
+    //std::cout <<"ball x = " <<new_ball_pos.x<<" ball y = "<<new_ball_pos.y<<'\n';
     if (playerMoving) {
       b2Vec2 force(getForceVector(delta.asSeconds(),direction).x,0.0);
       paddleBody->ApplyForceToCenter(force,true);
@@ -262,14 +323,15 @@ int main()
     }else{
       paddleBody->SetLinearVelocity(b2Vec2(0.0f,0.0f));
     }
-    window.draw(circ);
     window.draw(line,2,sf::Lines);
-    window.draw(walllines,4,sf::Lines);
+    window.draw(wall1,2,sf::Lines);
+    window.draw(wall2,2,sf::Lines);
+    window.draw(wall3,2,sf::Lines);
     window.draw(paddle);
+    window.draw(circ);
     // Render Game Objects
     window.display();
   }
-
-  std::cout<<"gnd x = "<< grdposition.x <<" gnd y = "<< grdposition.y <<" Paddle x = "<<paddle_pos.x<<" Paddle y = "<<paddle_pos.y<<'\n';
+  std::cout<<"Paddle x = "<<paddle_pos.x<<" Paddle y = "<<paddle_pos.y<<'\n';
   return 0;
 }
