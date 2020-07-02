@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+package netrounds.callexecuter;
+
+message Metrics {
+  int32 stream_id = 1;
+  google.protobuf.Timestamp timestamp = 2;
+  map<string, MetricValue> values = 4;
+}
+
+/**
+ * A metric value can be either an integer or a float.
+ */
+message MetricValue {
+
+  oneof type {
+    int64 int_val = 1;
+    float float_val = 2;
+  }
+}
