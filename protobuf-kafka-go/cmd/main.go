@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	proto_kafka "github.com/myexperiments/protobuf-kafka-go/gen"
 )
 
 func main() {
