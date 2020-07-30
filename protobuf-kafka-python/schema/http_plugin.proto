@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package netrounds.plugin.metrics;
+
+message Metrics {
+    float connect_time_avg = 1;
+    float first_byte_time_avg = 2;
+    float response_time_min = 3;
+    float response_time_avg = 4;
+    float response_time_max = 5;
+    float size_avg = 6;
+    float speed_avg = 7;
+    int64 es_timeout = 8;
+    int64 es_response = 9;
+    int64 es = 10;
+}
+
