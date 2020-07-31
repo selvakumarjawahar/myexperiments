@@ -15,9 +15,6 @@ SimulatedTags = {
     "plugin.name": "http"
 }
 
-SimulatedHTTPMetrics = {
-}
-
 
 def serializeHTTPMetrics():
     httpmsg = HTTPMetrics()
@@ -63,6 +60,6 @@ if __name__ == "__main__":
         # 'debug': 'topic,broker',
         'queue.buffering.max.ms': 100})
     while True:
-        print("Pushing metrics")
+        print("Pushing plugin metrics to topic plugin.metrics ")
         pushKafka(kproducer, "plugin.metrics")
         time.sleep(5)

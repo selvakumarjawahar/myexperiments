@@ -8,16 +8,17 @@ import (
 	"github.com/jhump/protoreflect/desc/builder"
 	"github.com/jhump/protoreflect/desc/protoparse"
 	"github.com/jhump/protoreflect/dynamic"
-	protokafka "github.com/selvakumarjawahar/myexperiments/protobuf-kafka-go/gen"
+	exec "github.com/selvakumarjawahar/myexperiments/protobuf-kafka-go/gen/callexecuter"
 	pref "google.golang.org/protobuf/reflect/protoreflect"
+	"errors"
 	//protodynamic "google.golang.org/protobuf/types/dynamicpb"
 	"os"
 	"os/signal"
 	"syscall"
 )
 
-func deserializeProtobuf(msg []byte ) {
-	metrics := protokafka.Metrics{}
+func deserializeCallexecuter(msg []byte ) {
+	metrics := exec.Metrics{}
 	if err := proto.Unmarshal(msg,&metrics); err != nil {
 		fmt.Println("Error in unmarshalling protobuf %s",err)
 		return
@@ -26,9 +27,9 @@ func deserializeProtobuf(msg []byte ) {
 	fmt.Printf("Stream ID = %d \n", metrics.StreamId)
 	for key,val := range metrics.Values {
 		switch val.GetType().(type) {
-		case *protokafka.MetricValue_FloatVal:
+		case *exec.MetricValue_FloatVal:
 			fmt.Printf("%s = %f \n", key, val.GetFloatVal())
-		case *protokafka.MetricValue_IntVal:
+		case *exec.MetricValue_IntVal:
 			fmt.Printf("%s = %d \n", key, val.GetIntVal())
 		}
 	}
@@ -53,15 +54,14 @@ type MetricFields map[string]interface{}
 
 func buildProto(fields MetricFields) (*desc.MessageDescriptor,error) {
 
-	var msg_builder builder.MessageBuilder
+	msg_builder := builder.NewMessage("Metrics")
+
 	for key,value := range fields {
 		switch value.(type) {
 		case int:
-			fld_builder := builder.NewField(key,builder.FieldTypeInt64())
-			msg_builder.AddField(fld_builder)
+			msg_builder.AddField(builder.NewField(key,builder.FieldTypeInt64()))
 		default:
-			fld_builder := builder.NewField(key,builder.FieldTypeFloat())
-			msg_builder.AddField(fld_builder)
+			msg_builder.AddField(builder.NewField(key,builder.FieldTypeFloat()))
 		}
 	}
 	return msg_builder.Build()
@@ -73,50 +73,83 @@ func dynamicDeserializationFromDesc(msg []byte, messageBuilder* desc.MessageDesc
 	data.Unmarshal(msg)
 	fields := data.GetKnownFields()
 	for _,field := range fields {
-		fmt.Printf("The Field name = %s Field value = %s",field.String(),data.GetFieldByName(field.String()) )
+		fmt.Printf("The Field name = %s Field value = %v \n",
+			field.GetName(),
+			data.GetFieldByName(field.GetName()))
 	}
 	return true
 }
 
-func dynamicDeserialization(msg []byte) bool {
+func dynamicDeserialization(msg []byte, protofile string, msgName string) (*dynamic.Message, error) {
 	msg_bytes := pref.RawFields(msg)
 	if !msg_bytes.IsValid() {
 		fmt.Printf("Error in the Message, not wireformat")
-		return false
+		return nil, errors.New("Error in the Message, not wireformat")
 	}
 	parser := protoparse.Parser{}
-	fd,err := parser.ParseFiles("/home/selva/Projects/personal/myexperiments/protobuf-kafka-go/api/proto/callexecuter_metrics.proto")
+	fd,err := parser.ParseFiles(protofile)
 	if err != nil {
 		fmt.Printf("error in parsing protofile %s\n",err)
-		return false
+		return nil, errors.New("error in parsing protofile")
 	}
-	msgfd := fd[0].FindMessage("netrounds.callexecuter.Metrics")
+	msgfd := fd[0].FindMessage(msgName)
 	if msgfd == nil {
 		fmt.Printf("Message Not found \n")
-		return false
+		return nil, errors.New("Message not found")
 	}
 	data := dynamic.NewMessage(msgfd)
+
 	data.Unmarshal(msg)
-	fmt.Printf("Timestamp = %d \n", data.GetFieldByName("timestamp"))
-	fmt.Printf("Stream ID = %d \n", data.GetFieldByName("stream_id"))
-	data.ForEachMapFieldEntryByName("values",func(key interface{}, val interface{}) bool {
-			fmt.Printf("%s \n", key)
-    		return true
-	} )
-	return true
+
+	return data, nil
+}
+
+func parseHTTPMetrics(message *dynamic.Message) {
+
+	var intVal int
+	var floatVal float64
+	httpFields :=  MetricFields{
+		"connect_time_avg" : floatVal,
+		"first_byte_time_avg" : floatVal,
+		"response_time_min" : floatVal,
+		"response_time_avg" : floatVal,
+		"response_time_max" : floatVal,
+		"size_avg" : floatVal,
+		"speed_avg" : floatVal,
+		"es_timeout" : intVal,
+		"es_response" : intVal,
+		"es" : intVal }
+	fmt.Print("running build proto \n")
+
+	md, err := buildProto(httpFields)
+	if  err != nil {
+		fmt.Printf("Error in Generating message descriptior")
+		return
+	}
+	fmt.Print("build proto successful")
+
+	if message.HasFieldName("metrics") {
+		values := message.GetFieldByName("metrics").(*dynamic.Message).GetFieldByName("values")
+		dynamicDeserializationFromDesc(values.([]byte),md)
+	} else {
+		fmt.Print("Field not found\n")
+	}
 }
 
 func main() {
 
-	if len(os.Args) < 4 {
-		fmt.Fprintf(os.Stderr, "Usage: %s <broker> <group> <topics..>\n",
+	if len(os.Args) < 6 {
+		fmt.Fprintf(os.Stderr, "Usage: %s <broker> <group> <topic> <protofile> <MessageName> \n",
 			os.Args[0])
 		os.Exit(1)
 	}
 
 	broker := os.Args[1]
 	group := os.Args[2]
-	topics := os.Args[3:]
+	topic := os.Args[3]
+	protofile := os.Args[4]
+	messgName := os.Args[5]
+
 	sigchan := make(chan os.Signal, 1)
 	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
 
@@ -134,7 +167,7 @@ func main() {
 
 	fmt.Printf("Created Consumer %v\n", c)
 
-	err = c.SubscribeTopics(topics, nil)
+	err = c.Subscribe(topic, nil)
 
 	run := true
 
@@ -148,13 +181,13 @@ func main() {
 			if ev == nil {
 				continue
 			}
-
 			switch e := ev.(type) {
 			case *kafka.Message:
-					//deserializeProtobuf(e.Value)
-					dynamicDeserialization(e.Value)
-				if e.Headers != nil {
-					fmt.Printf("%% Headers: %v\n", e.Headers)
+				data,err := dynamicDeserialization(e.Value, protofile, messgName)
+				if err != nil {
+					fmt.Printf("Error in serialization %s\n",err.Error())
+				} else {
+					parseHTTPMetrics(data)
 				}
 			case kafka.Error:
 				fmt.Fprintf(os.Stderr, "%% Error: %v: %v\n", e.Code(), e)
@@ -166,8 +199,6 @@ func main() {
 			}
 		}
 	}
-
-
 	fmt.Printf("Closing consumer\n")
 	c.Close()
 }
