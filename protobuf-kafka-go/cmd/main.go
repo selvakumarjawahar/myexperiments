@@ -1,17 +1,17 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/golang/protobuf/proto"
+	ts "github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/desc/builder"
 	"github.com/jhump/protoreflect/desc/protoparse"
 	"github.com/jhump/protoreflect/dynamic"
 	exec "github.com/selvakumarjawahar/myexperiments/protobuf-kafka-go/gen/callexecuter"
 	pref "google.golang.org/protobuf/reflect/protoreflect"
-	"errors"
-	//protodynamic "google.golang.org/protobuf/types/dynamicpb"
 	"os"
 	"os/signal"
 	"syscall"
@@ -51,6 +51,7 @@ func deserializeCallexecuter(msg []byte ) {
 //es : int
 
 type MetricFields map[string]interface{}
+type MockGeneratorsMap map[string]func()MetricFields
 
 func buildProto(fields MetricFields) (*desc.MessageDescriptor,error) {
 
@@ -92,14 +93,25 @@ func dynamicDeserialization(msg []byte, protofile string, msgName string) (*dyna
 		fmt.Printf("error in parsing protofile %s\n",err)
 		return nil, errors.New("error in parsing protofile")
 	}
+	fmt.Print(fd[0].GetPackage())
+	fmt.Printf("\n")
+	msgStruct := fd[0].GetPackage() + ".Metrics"
+	fmt.Printf("%s\n",msgStruct)
 	msgfd := fd[0].FindMessage(msgName)
 	if msgfd == nil {
 		fmt.Printf("Message Not found \n")
 		return nil, errors.New("Message not found")
 	}
+	return nil,nil
 	data := dynamic.NewMessage(msgfd)
 
 	data.Unmarshal(msg)
+	fields := data.GetKnownFields()
+	for _,field := range fields {
+		fmt.Printf("The Field name = %s Field value = %v \n",
+			field.GetName(),
+			data.GetFieldByName(field.GetName()))
+	}
 
 	return data, nil
 }
@@ -136,7 +148,73 @@ func parseHTTPMetrics(message *dynamic.Message) {
 	}
 }
 
+func ProduceCallexecuterMetrics(sid int32, timestamp int64, metrics MetricFields ) *exec.Metrics {
+	var times ts.Timestamp
+	times.Seconds = timestamp
+	var metricsMap map[string]*exec.MetricValue
+	var metricsValue exec.MetricValue
+	for key,val := range metrics {
+		switch val.(type) {
+		case int:
+			metricsValue = exec.MetricValue{
+				Type: &exec.MetricValue_IntVal{val.(int64)}}
+		default:
+			metricsValue = exec.MetricValue{
+				Type: &exec.MetricValue_FloatVal{val.(float32)}}
+		}
+		metricsMap[key] = &metricsValue
+	}
+	msg := exec.Metrics{
+		StreamId: sid,
+		Timestamp: &times,
+		Values: metricsMap}
+
+	return &msg
+}
+
+
+var genMap MockGeneratorsMap
+
+func genMockMetricHTTP() MetricFields {
+	mockMetric := map[string]interface{}{
+		"connect_time_avg": 25.0,
+		"first_byte_time_avg": 43.68,
+		"response_time_min": 23.45,
+		"response_time_avg": 21.09,
+		"response_time_max": 34.56,
+		"size_avg": 21.43,
+		"speed_avg": 21.56,
+		"es_timeout": 43,
+		"es_response": 23,
+		"es": 42}
+	return mockMetric
+}
+
+func produceKafka(producer *kafka.Producer, sid int32, timestamp int64, mockGen MockGeneratorsMap,
+	topic string, partition int32) {
+	mfields := mockGen["http"]()
+	callMetrics := ProduceCallexecuterMetrics(sid,timestamp,mfields)
+	msg,err := proto.Marshal(callMetrics)
+	if err != nil {
+		fmt.Print("Error Marshallling callexecuter metrics")
+		return
+	}
+	err = producer.Produce(&kafka.Message{
+		TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: partition},
+		Value:          msg,
+	}, nil)
+	if err != nil {
+		fmt.Print("Error in sending kafka")
+		return
+	}
+	return
+}
+
+
 func main() {
+
+	//genMap["http"] = genMockMetricHTTP
+
 
 	if len(os.Args) < 6 {
 		fmt.Fprintf(os.Stderr, "Usage: %s <broker> <group> <topic> <protofile> <MessageName> \n",
@@ -183,12 +261,13 @@ func main() {
 			}
 			switch e := ev.(type) {
 			case *kafka.Message:
-				data,err := dynamicDeserialization(e.Value, protofile, messgName)
+				_,err := dynamicDeserialization(e.Value, protofile, messgName)
 				if err != nil {
 					fmt.Printf("Error in serialization %s\n",err.Error())
-				} else {
-					parseHTTPMetrics(data)
-				}
+					continue
+				} //else {
+					//parseHTTPMetrics(data)
+				//}
 			case kafka.Error:
 				fmt.Fprintf(os.Stderr, "%% Error: %v: %v\n", e.Code(), e)
 				if e.Code() == kafka.ErrAllBrokersDown {
