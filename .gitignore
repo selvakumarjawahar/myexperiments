@@ -39,3 +39,5 @@ cmake-build-debug
 
 #python
 venv
+*.pyc
+*/*.pyc

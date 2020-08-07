@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package netrounds.agent.metrics;
+
+message Metrics {
+    uint64 measurement_id = 1;
+    uint64 config_version = 2;
+    int64 timestamp = 3;
+    map<string, string> tags = 4;
+    bytes values = 5;
+}
+
+message Message {
+    int64 send_time = 1;
+    Metrics metrics = 2;
+}
