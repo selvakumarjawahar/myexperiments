@@ -1,0 +1,20 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/selva/Projects/personal/myexperiments/shareptr/main.cpp
+iostream
+-
+memory
+-
+thread
+-
+chrono
+-
+future
+-
+

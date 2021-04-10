@@ -1,0 +1,3 @@
+/home/selva/Projects/personal/myexperiments/shareptr/build/CMakeFiles/rebuild_cache.dir
+/home/selva/Projects/personal/myexperiments/shareptr/build/CMakeFiles/shareptr.dir
+/home/selva/Projects/personal/myexperiments/shareptr/build/CMakeFiles/edit_cache.dir
