@@ -36,8 +36,12 @@
 
 #cmake 
 cmake-build-debug
+build
 
 #python
 venv
 *.pyc
 */*.pyc
+
+# compiler db files
+compile_commands.json
