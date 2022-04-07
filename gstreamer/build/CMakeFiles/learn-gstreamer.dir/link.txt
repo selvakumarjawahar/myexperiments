@@ -1,1 +1,0 @@
-/usr/bin/c++ CMakeFiles/learn-gstreamer.dir/src/main.cpp.o -o learn-gstreamer  /usr/lib/x86_64-linux-gnu/libgstreamer-1.0.so /usr/lib/x86_64-linux-gnu/libgobject-2.0.so /usr/lib/x86_64-linux-gnu/libglib-2.0.so 

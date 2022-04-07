@@ -1,3 +1,0 @@
-/home/selva/Projects/personal/myexperiments/gstreamer/build/CMakeFiles/rebuild_cache.dir
-/home/selva/Projects/personal/myexperiments/gstreamer/build/CMakeFiles/learn-gstreamer.dir
-/home/selva/Projects/personal/myexperiments/gstreamer/build/CMakeFiles/edit_cache.dir

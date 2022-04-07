@@ -36,6 +36,7 @@
 
 #cmake 
 cmake-build-debug
+build
 
 #python
 venv
